@@ -13,7 +13,15 @@ st.caption("Live updates from Austin McConnell's big board")
 @st.cache_data(ttl=60)
 def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnTW2iNs8DQ--KGu7YkDLmaxumSsA-i8h8x3k79ALPN822N0moB2ajzMFXRp2bUuPoD3vrfvPRmKFi/pub?output=csv"
-    return pd.read_csv(url)
+    df = pd.read_csv(url)
+
+    # Mark all players below "Second Round prospects" as 2nd Round
+    if "Second Round prospects" in df["Rank"].values:
+        sr_index = df[df["Rank"] == "Second Round prospects"].index[0]
+        df.loc[sr_index+1:, "Rank"] = "2nd Round"
+        df = df[df["Rank"] != "Second Round prospects"]
+
+    return df
 
 def get_team_logo(team_abbr):
     if not team_abbr or team_abbr == "":
@@ -24,11 +32,8 @@ def get_team_logo(team_abbr):
 df = load_data()
 df = df.fillna("")
 
-# --- DROPDOWN MENU ---
-first_round = df[df["Rank"] != "Second Round prospects"]
-second_round = df[df["Rank"] == "Second Round prospects"]
-
-dropdown_names = ["-- All Players --"] + first_round["Name"].tolist()
+# --- DROPDOWN MENU (Exclude label-only row, include all real players) ---
+dropdown_names = ["-- All Players --"] + df["Name"].tolist()
 selected_player = st.selectbox("Select a player to view", dropdown_names)
 
 # --- PLAYER DISPLAY FUNCTION ---
@@ -39,12 +44,14 @@ def display_player(row):
     with col1:
         if row["Headshot"]:
             try:
-                response = requests.get(row["Headshot"])
+                response = requests.get(row["Headshot"], timeout=5)
                 if response.status_code == 200:
                     img = Image.open(BytesIO(response.content))
                     st.image(img, width=150)
-            except:
-                pass
+                else:
+                    st.empty()
+            except Exception as e:
+                st.empty()
 
     # Player Info
     with col2:
@@ -72,12 +79,6 @@ if selected_player != "-- All Players --":
     player_row = df[df["Name"] == selected_player].iloc[0]
     display_player(player_row)
 else:
-    st.subheader("First Round Prospects")
-    for _, row in first_round.iterrows():
-        display_player(row)
-        st.markdown("---")
-
-    st.subheader("Second Round Prospects")
-    for _, row in second_round.iterrows():
+    for _, row in df.iterrows():
         display_player(row)
         st.markdown("---")
