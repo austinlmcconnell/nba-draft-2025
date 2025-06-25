@@ -84,8 +84,13 @@ def display_player(row):
         except:
             rank = row['Rank']
 
+        try:
+            mock_pick = int(float(row['My Mock Pick No.']))
+        except:
+            mock_pick = row['My Mock Pick No.']
+
         st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
-        st.markdown(f"**Mock Draft Position:** {row['My Mock Pick No.']}")
+        st.markdown(f"**Mock Draft Position:** {mock_pick}")
         st.markdown(f"**Position:** {row['Position']}")
         st.markdown(f"**School:** {row['School/Country']}")
         st.markdown(f"**Height:** {row['Height']} | **Weight:** {row['Weight']} | **Wingspan:** {row['Wingspan']}")
@@ -111,9 +116,10 @@ def display_player(row):
                 st.image(drafted_logo, width=60)
 
         # Grade
-        grade = row['My Grade'].strip()
-        grade_color = get_grade_color(grade)
-        st.markdown(f"**Grade:** <span style='color:{grade_color}'>{grade}</span>", unsafe_allow_html=True)
+        if row['My Grade']:
+            grade = row['My Grade'].strip()
+            grade_color = get_grade_color(grade)
+            st.markdown(f"**Grade:** <span style='color:{grade_color}'>{grade}</span>", unsafe_allow_html=True)
 
 # --- DISPLAY LOGIC ---
 if selected_player != "-- All Players --":
