@@ -5,9 +5,9 @@ import pandas as pd
 st.set_page_config(layout="wide", page_title="2025 NBA Draft Tracker")
 st.markdown("""
     <style>
-        body {
-            background-color: white;
-            color: black;
+        html, body, [class*="css"]  {
+            background-color: white !important;
+            color: black !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -42,9 +42,10 @@ def get_team_color(team):
 
 def get_grade_color(grade):
     color_map = {
-        "A": "green", "A-": "green", "B+": "#85C88A", "B": "#C4DFA2", "B-": "#E3DD87",
-        "C+": "#F2C14E", "C": "orange", "C-": "#FF9933", "D+": "#FF6666",
-        "D": "#CC0000", "D-": "#990000", "F": "red"
+        "A+": "green", "A": "green", "A-": "green",
+        "B+": "#85C88A", "B": "#C4DFA2", "B-": "#E3DD87",
+        "C+": "#F2C14E", "C": "orange", "C-": "#FF9933",
+        "D+": "#FF6666", "D": "#CC0000", "D-": "#990000", "F": "red"
     }
     return color_map.get(grade.strip().upper(), "black")
 
@@ -90,7 +91,6 @@ def display_player(row):
             mock_pick = row['My Mock Pick No.']
 
         st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
-        st.markdown(f"**Mock Draft Position:** {mock_pick}")
         st.markdown(f"**Position:** {row['Position']}")
         st.markdown(f"**School:** {row['School/Country']}")
         st.markdown(f"**Height:** {row['Height']} | **Weight:** {row['Weight']} | **Wingspan:** {row['Wingspan']}")
@@ -102,6 +102,7 @@ def display_player(row):
             mock_team = row['My Mock Team']
             mock_color = get_team_color(mock_team)
             mock_logo = team_logo_lookup.get(mock_team, "")
+            st.markdown(f"**Mock Draft Position:** <span style='color:{mock_color}'>{mock_pick}</span>", unsafe_allow_html=True)
             st.markdown(f"**Mock Draft Team:** <span style='color:{mock_color}'>{mock_team}</span>", unsafe_allow_html=True)
             if not row['Drafted Team'] and mock_logo:
                 st.image(mock_logo, width=60)
@@ -111,6 +112,7 @@ def display_player(row):
             drafted_team = row['Drafted Team']
             drafted_color = get_team_color(drafted_team)
             drafted_logo = team_logo_lookup.get(drafted_team, "")
+            st.markdown(f"**Draft Position:** <span style='color:{drafted_color}'>{pick}</span>", unsafe_allow_html=True)
             st.markdown(f"**Drafted Team:** <span style='color:{drafted_color}'>{drafted_team}</span>", unsafe_allow_html=True)
             if drafted_logo:
                 st.image(drafted_logo, width=60)
