@@ -1,62 +1,67 @@
-
 import streamlit as st
 import pandas as pd
+import requests
+from PIL import Image
+from io import BytesIO
 
-# Set page config
-st.set_page_config(page_title="2025 NBA Draft Portal", layout="wide")
-
-# Load Google Sheet CSV export
-sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnTW2iNs8DQ--KGu7YkDLmaxumSsA-i8h8x3k79ALPN822N0moB2ajzMFXRp2bUuPoD3vrfvPRmKFi/pub?output=csv"
-df = pd.read_csv(sheet_url)
-
-# Clean and sort
-df = df.fillna("")
-df["Drafted Pick No."] = pd.to_numeric(df["Drafted Pick No."], errors="coerce")
-df = df.sort_values(by=["Drafted Pick No.", "Rank"], na_position="last")
-
-# Header
+# --- CONFIG ---
+st.set_page_config(layout="wide", page_title="2025 NBA Draft Tracker")
 st.title("2025 NBA Draft Tracker")
-st.markdown("Live updates from Austin McConnell's big board")
+st.caption("Live updates from Austin McConnell's big board")
 
-# Display each player
-for _, row in df.iterrows():
-    team = row["Drafted Team"]
-    try:
-        pick = int(float(row["Drafted Pick No."]))
-    except (ValueError, TypeError):
-        pick = "—"
-    color = "#CCCCCC"  # default gray
-    logo_url = ""
+# --- FUNCTIONS ---
+@st.cache_data(ttl=60)
+def load_data():
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIrYuwvZev7Sn8K1SvW05aUWr4zL0rPSthIL8ECMeEUf_zHaO4eOn4r5akFdy2m3xeU7zBZz2-Hv1/pub?output=csv"
+    return pd.read_csv(url)
 
-    # Example static team color dict (expand as needed)
-    team_colors = {
-        "ATL": "#E03A3E", "BOS": "#007A33", "CHA": "#1D1160", "CHI": "#CE1141",
-        "DAL": "#00538C", "DEN": "#0E2240", "DET": "#C8102E", "GSW": "#1D428A",
-        "HOU": "#CE1141", "IND": "#002D62", "LAC": "#C8102E", "LAL": "#552583",
-        "MEM": "#5D76A9", "MIA": "#98002E", "MIL": "#00471B", "MIN": "#0C2340",
-        "NOP": "#0C2340", "NYK": "#006BB6", "OKC": "#007AC1", "ORL": "#0077C0",
-        "PHI": "#006BB6", "PHX": "#1D1160", "POR": "#E03A3E", "SAC": "#5A2D81",
-        "SAS": "#C4CED4", "TOR": "#CE1141", "UTA": "#002B5C", "WAS": "#002B5C"
-    }
-    team_logos = {abbr: f"https://a.espncdn.com/i/teamlogos/nba/500/{abbr.lower()}.png" for abbr in team_colors}
+def get_team_logo(team_abbr):
+    if not team_abbr or team_abbr == "":
+        return None
+    return f"https://a.espncdn.com/i/teamlogos/nba/500/{team_abbr.lower()}.png"
 
-    if team in team_colors:
-        color = team_colors[team]
-        logo_url = team_logos[team]
+# --- LOAD DATA ---
+df = load_data()
+df = df.fillna("")
 
-    with st.container():
-        st.markdown(f"<h3 style='color:{color}'>{pick}. {row['Name']}</h3>", unsafe_allow_html=True)
-        cols = st.columns([1, 3])
-        with cols[0]:
-            if row['Headshot']:
-                st.image(row['Headshot'], width=150)
-            if logo_url:
-                st.image(logo_url, width=75)
-        with cols[1]:
-            st.markdown(f"**Position**: {row['Position']}")
-            st.markdown(f"**School**: {row['School/Country']}")
-            st.markdown(f"**Height**: {row['Height']}  |  **Weight**: {row['Weight']}  |  **Wingspan**: {row['Wingspan']}")
-            st.markdown(f"**Biggest Skill**: {row['Biggest Skill']}")
-            st.markdown(f"**Biggest Weakness**: {row['Biggest Weakness']}")
-            st.markdown(f"**Grade**: {row['My Grade']}")
+# --- DROPDOWN MENU ---
+selected_player = st.selectbox("Select a player to view", ["-- All Players --"] + df["Name"].tolist())
+
+# --- PLAYER DISPLAY FUNCTION ---
+def display_player(row):
+    col1, col2 = st.columns([1, 4])
+
+    # Headshot
+    with col1:
+        if row["Headshot"]:
+            st.image(row["Headshot"], width=150)
+
+    # Player Info
+    with col2:
+        try:
+            pick = int(float(row["Drafted Pick No."]))
+        except (ValueError, TypeError):
+            pick = "—"
+
+        st.markdown(f"### {pick}. {row['Name']}")
+        st.markdown(f"**Position:** {row['Position']}")
+        st.markdown(f"**School:** {row['School/Country']}")
+        st.markdown(f"**Height:** {row['Height']} | **Weight:** {row['Weight']} | **Wingspan:** {row['Wingspan']}")
+        st.markdown(f"**Biggest Skill:** {row['Biggest Skill']}")
+        st.markdown(f"**Biggest Weakness:** {row['Biggest Weakness']}")
+
+        # Team Logo and Grade
+        team_abbr = row['Drafted Team']
+        team_logo = get_team_logo(team_abbr)
+        if team_logo:
+            st.image(team_logo, width=80)
+        st.markdown(f"**Grade:** {row['My Grade']}")
+
+# --- DISPLAY LOGIC ---
+if selected_player != "-- All Players --":
+    player_row = df[df["Name"] == selected_player].iloc[0]
+    display_player(player_row)
+else:
+    for _, row in df.iterrows():
+        display_player(row)
         st.markdown("---")
