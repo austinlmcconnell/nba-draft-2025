@@ -44,13 +44,17 @@ def calculate_mock_accuracy(df):
     max_score = 0
     detailed_rows = []
 
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         try:
             name = row["Name"]
-            mock_pick = int(float(row["My Mock Pick No."]))
             drafted_pick = int(float(row["Drafted Pick No."]))
             mock_team = row["My Mock Team"].strip()
             drafted_team = row["Drafted Team"].strip()
+    
+            if row["My Mock Pick No."] == "" or pd.isna(row["My Mock Pick No."]):
+                mock_pick = idx + 1  # fallback to appearance order
+            else:
+                mock_pick = int(float(row["My Mock Pick No."]))
         except:
             continue
 
@@ -143,7 +147,10 @@ with tabs[0]:
             except: pick = "—"
             try: rank = int(float(row['Rank'])) if row['Rank'] != "2nd Round" else "2nd Round"
             except: rank = row['Rank']
-            try: mock_pick = int(float(row['My Mock Pick No.']))
+            try: if row["My Mock Pick No."] == "" or pd.isna(row["My Mock Pick No."]):
+                    mock_pick = idx + 1  # fallback to row order
+                 else: 
+                    mock_pick = int(float(row["My Mock Pick No."]))
             except: mock_pick = row['My Mock Pick No.']
             try: weight_val = int(float(row['Weight']))
             except: weight_val = row['Weight']
