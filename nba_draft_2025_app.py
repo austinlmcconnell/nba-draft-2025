@@ -137,55 +137,64 @@ with tabs[0]:
     selected_player = st.selectbox("Select a player to view", dropdown_names)
 
     def display_player(row):
-        col1, col2, col3 = st.columns([1, 2.5, 1.5])
-        with col1:
-            if row["Headshot"]:
-                st.image(row["Headshot"], width=160)
+    col1, col2, col3 = st.columns([1, 2.5, 1.5])
+    with col1:
+        if row["Headshot"]:
+            st.image(row["Headshot"], width=160)
 
-        with col2:
-            try: pick = int(float(row["Drafted Pick No."]))
-            except: pick = "—"
-            try: rank = int(float(row['Rank'])) if row['Rank'] != "2nd Round" else "2nd Round"
-            except: rank = row['Rank']
-            try: if row["My Mock Pick No."] == "" or pd.isna(row["My Mock Pick No."]):
-                    mock_pick = idx + 1  # fallback to row order
-                 else: 
-                    mock_pick = int(float(row["My Mock Pick No."]))
-            except: mock_pick = row['My Mock Pick No.']
-            try: weight_val = int(float(row['Weight']))
-            except: weight_val = row['Weight']
+    with col2:
+        try:
+            pick = int(float(row["Drafted Pick No."]))
+        except:
+            pick = "—"
+        try:
+            rank = int(float(row['Rank'])) if row['Rank'] != "2nd Round" else "2nd Round"
+        except:
+            rank = row['Rank']
+        try:
+            weight_val = int(float(row['Weight']))
+        except:
+            weight_val = row['Weight']
 
-            st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>Age:</div><div class='fact-value'>{row['Draft Age']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>Position:</div><div class='fact-value'>{row['Position']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>School:</div><div class='fact-value'>{row['School/Country']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>Height | Weight | Wingspan:</div><div class='fact-value'>{row['Height']} | {weight_val} | {row['Wingspan']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>NBA Comparison:</div><div class='fact-value'>{row['NBA Comparison']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>Biggest Skill:</div><div class='fact-value'>{row['Biggest Skill']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='fact-label'>Biggest Weakness:</div><div class='fact-value'>{row['Biggest Weakness']}</div>", unsafe_allow_html=True)
-            if row['My Grade']:
-                grade = row['My Grade'].strip()
-                grade_color = get_grade_color(grade)
-                st.markdown(f"<div class='fact-label'>Grade:</div><div class='fact-value' style='color:{grade_color}'>{grade}</div>", unsafe_allow_html=True)
+        try:
+            if row["My Mock Pick No."] == "" or pd.isna(row["My Mock Pick No."]):
+                mock_pick = df[df["Name"] == row["Name"]].index[0] + 1
+            else:
+                mock_pick = int(float(row["My Mock Pick No."]))
+        except:
+            mock_pick = "—"
 
-        with col3:
-            if row['My Mock Team']:
-                mock_team = row['My Mock Team']
-                mock_color = get_team_color(mock_team)
-                mock_logo = team_logo_lookup.get(mock_team, "")
-                st.markdown(f"<div class='fact-label'>Mock Draft Position:</div><div class='fact-value' style='color:{mock_color}'>{mock_pick}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='fact-label'>Mock Draft Team:</div><div class='fact-value' style='color:{mock_color}'>{mock_team}</div>", unsafe_allow_html=True)
-                if not row['Drafted Team'] and mock_logo:
-                    st.image(mock_logo, width=60)
+        st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>Age:</div><div class='fact-value'>{row['Draft Age']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>Position:</div><div class='fact-value'>{row['Position']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>School:</div><div class='fact-value'>{row['School/Country']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>Height | Weight | Wingspan:</div><div class='fact-value'>{row['Height']} | {weight_val} | {row['Wingspan']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>NBA Comparison:</div><div class='fact-value'>{row['NBA Comparison']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>Biggest Skill:</div><div class='fact-value'>{row['Biggest Skill']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fact-label'>Biggest Weakness:</div><div class='fact-value'>{row['Biggest Weakness']}</div>", unsafe_allow_html=True)
+        if row['My Grade']:
+            grade = row['My Grade'].strip()
+            grade_color = get_grade_color(grade)
+            st.markdown(f"<div class='fact-label'>Grade:</div><div class='fact-value' style='color:{grade_color}'>{grade}</div>", unsafe_allow_html=True)
 
-            if row['Drafted Team']:
-                drafted_team = row['Drafted Team']
-                drafted_color = get_team_color(drafted_team)
-                drafted_logo = team_logo_lookup.get(drafted_team, "")
-                st.markdown(f"<div class='fact-label'>Draft Position:</div><div class='fact-value' style='color:{drafted_color}'>{pick}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='fact-label'>Drafted Team:</div><div class='fact-value' style='color:{drafted_color}'>{drafted_team}</div>", unsafe_allow_html=True)
-                if drafted_logo:
-                    st.image(drafted_logo, width=60)
+    with col3:
+        if row['My Mock Team']:
+            mock_team = row['My Mock Team']
+            mock_color = get_team_color(mock_team)
+            mock_logo = team_logo_lookup.get(mock_team, "")
+            st.markdown(f"<div class='fact-label'>Mock Draft Position:</div><div class='fact-value' style='color:{mock_color}'>{mock_pick}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='fact-label'>Mock Draft Team:</div><div class='fact-value' style='color:{mock_color}'>{mock_team}</div>", unsafe_allow_html=True)
+            if not row['Drafted Team'] and mock_logo:
+                st.image(mock_logo, width=60)
+
+        if row['Drafted Team']:
+            drafted_team = row['Drafted Team']
+            drafted_color = get_team_color(drafted_team)
+            drafted_logo = team_logo_lookup.get(drafted_team, "")
+            st.markdown(f"<div class='fact-label'>Draft Position:</div><div class='fact-value' style='color:{drafted_color}'>{pick}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='fact-label'>Drafted Team:</div><div class='fact-value' style='color:{drafted_color}'>{drafted_team}</div>", unsafe_allow_html=True)
+            if drafted_logo:
+                st.image(drafted_logo, width=60)
 
     if selected_player != "-- All Players --":
         display_player(df[df["Name"] == selected_player].iloc[0])
