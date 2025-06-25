@@ -1,8 +1,5 @@
 import streamlit as st
 import pandas as pd
-import requests
-from PIL import Image
-from io import BytesIO
 
 # --- CONFIG ---
 st.set_page_config(layout="wide", page_title="2025 NBA Draft Tracker")
@@ -43,15 +40,7 @@ def display_player(row):
     # Headshot
     with col1:
         if row["Headshot"]:
-            try:
-                response = requests.get(row["Headshot"], timeout=5)
-                if response.status_code == 200:
-                    img = Image.open(BytesIO(response.content))
-                    st.image(img, width=150)
-                else:
-                    st.empty()
-            except Exception as e:
-                st.empty()
+            st.image(row["Headshot"], width=150)
 
     # Player Info
     with col2:
@@ -61,17 +50,27 @@ def display_player(row):
             pick = "—"
 
         st.markdown(f"### {pick}. {row['Name']}")
+        st.markdown(f"**Rank:** {row['Rank']}")
         st.markdown(f"**Position:** {row['Position']}")
         st.markdown(f"**School:** {row['School/Country']}")
         st.markdown(f"**Height:** {row['Height']} | **Weight:** {row['Weight']} | **Wingspan:** {row['Wingspan']}")
         st.markdown(f"**Biggest Skill:** {row['Biggest Skill']}")
         st.markdown(f"**Biggest Weakness:** {row['Biggest Weakness']}")
 
-        # Team Logo and Grade
-        team_abbr = row['Drafted Team']
-        team_logo = get_team_logo(team_abbr)
-        if team_logo:
-            st.image(team_logo, width=80)
+        # Mocked Team
+        if row['My Mock Team']:
+            mock_team_logo = get_team_logo(row['My Mock Team'])
+            st.markdown(f"**Mock Draft Team:** {row['My Mock Team']}")
+            if mock_team_logo:
+                st.image(mock_team_logo, width=60)
+
+        # Drafted Team Logo and Grade
+        if row['Drafted Team']:
+            drafted_team_logo = get_team_logo(row['Drafted Team'])
+            st.markdown(f"**Drafted Team:** {row['Drafted Team']}")
+            if drafted_team_logo:
+                st.image(drafted_team_logo, width=60)
+
         st.markdown(f"**Grade:** {row['My Grade']}")
 
 # --- DISPLAY LOGIC ---
