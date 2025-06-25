@@ -6,17 +6,19 @@ st.set_page_config(layout="wide", page_title="2025 NBA Draft Tracker")
 st.markdown("""
     <style>
         html, body, [class*="css"]  {
-            background-color: white !important;
-            color: black !important;
+            background-color: #0e1117 !important;
+            color: white !important;
         }
         .fact-label {
             font-weight: bold;
             font-size: 1.05rem;
             margin-bottom: 0.25rem;
+            color: white;
         }
         .fact-value {
             font-size: 1.1rem;
             margin-bottom: 0.75rem;
+            color: white;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -30,7 +32,6 @@ def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnTW2iNs8DQ--KGu7YkDLmaxumSsA-i8h8x3k79ALPN822N0moB2ajzMFXRp2bUuPoD3vrfvPRmKFi/pub?output=csv"
     df = pd.read_csv(url)
 
-    # Mark all players below "Second Round prospects" as 2nd Round
     if "Second Round prospects" in df["Rank"].values:
         sr_index = df[df["Rank"] == "Second Round prospects"].index[0]
         df.loc[sr_index+1:, "Rank"] = "2nd Round"
@@ -47,7 +48,7 @@ def get_team_color(team):
         "Thunder": "#007AC1", "Magic": "#0077C0", "76ers": "#006BB6", "Suns": "#E56020", "Trail Blazers": "#E03A3E",
         "Kings": "#5A2D81", "Spurs": "#C4CED4", "Raptors": "#CE1141", "Jazz": "#002B5C", "Wizards": "#002B5C"
     }
-    return team_colors.get(team, "black")
+    return team_colors.get(team, "white")
 
 def get_grade_color(grade):
     color_map = {
@@ -56,12 +57,11 @@ def get_grade_color(grade):
         "C+": "#F2C14E", "C": "orange", "C-": "#FF9933",
         "D+": "#FF6666", "D": "#CC0000", "D-": "#990000", "F": "red"
     }
-    return color_map.get(grade.strip().upper(), "black")
+    return color_map.get(grade.strip().upper(), "white")
 
 def calculate_mock_accuracy(df):
     total_score = 0
     max_score = 0
-
     for _, row in df.iterrows():
         try:
             mock_pick = int(float(row["My Mock Pick No."]))
@@ -74,7 +74,7 @@ def calculate_mock_accuracy(df):
         if drafted_pick > 0:
             max_score += 10
             diff = abs(drafted_pick - mock_pick)
-            pick_score = max(0, 5 - diff)  # max 5 points, lose 1 for each spot off
+            pick_score = max(0, 5 - diff)
             team_score = 5 if mock_team == drafted_team else 0
             total_score += (pick_score + team_score)
 
@@ -93,18 +93,15 @@ def calculate_mock_accuracy(df):
         return f"F ({percent:.1f}%)"
 
 # --- LOAD DATA ---
-df = load_data()
-df = df.fillna("")
+df = load_data().fillna("")
 accuracy_grade = calculate_mock_accuracy(df)
 
-# Create a dictionary for team name to logo URL mapping
 team_logo_lookup = {
     row["Team Name"]: row["Team Logo URL"]
     for _, row in df.iterrows()
     if row["Team Name"] and row["Team Logo URL"]
 }
 
-# --- LAYOUT ---
 tabs = st.tabs(["Draft Board", "Mock Accuracy"])
 
 with tabs[0]:
@@ -113,28 +110,19 @@ with tabs[0]:
 
     def display_player(row):
         col1, col2, col3 = st.columns([1, 2.5, 1.5])
-
         with col1:
             if row["Headshot"]:
                 st.image(row["Headshot"], width=160)
 
         with col2:
-            try:
-                pick = int(float(row["Drafted Pick No."]))
-            except:
-                pick = "—"
-            try:
-                rank = int(float(row['Rank'])) if row['Rank'] != "2nd Round" else "2nd Round"
-            except:
-                rank = row['Rank']
-            try:
-                mock_pick = int(float(row['My Mock Pick No.']))
-            except:
-                mock_pick = row['My Mock Pick No.']
-            try:
-                weight_val = int(float(row['Weight']))
-            except:
-                weight_val = row['Weight']
+            try: pick = int(float(row["Drafted Pick No."]))
+            except: pick = "—"
+            try: rank = int(float(row['Rank'])) if row['Rank'] != "2nd Round" else "2nd Round"
+            except: rank = row['Rank']
+            try: mock_pick = int(float(row['My Mock Pick No.']))
+            except: mock_pick = row['My Mock Pick No.']
+            try: weight_val = int(float(row['Weight']))
+            except: weight_val = row['Weight']
 
             st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
             st.markdown(f"<div class='fact-label'>Age:</div><div class='fact-value'>{row['Draft Age']}</div>", unsafe_allow_html=True)
@@ -169,8 +157,7 @@ with tabs[0]:
                     st.image(drafted_logo, width=60)
 
     if selected_player != "-- All Players --":
-        player_row = df[df["Name"] == selected_player].iloc[0]
-        display_player(player_row)
+        display_player(df[df["Name"] == selected_player].iloc[0])
     else:
         for _, row in df.iterrows():
             display_player(row)
