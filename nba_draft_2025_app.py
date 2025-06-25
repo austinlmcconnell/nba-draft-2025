@@ -21,7 +21,10 @@ st.markdown("Live updates from Austin McConnell's big board")
 # Display each player
 for _, row in df.iterrows():
     team = row["Drafted Team"]
-    pick = int(row["Drafted Pick No."]) if row["Drafted Pick No."] else "—"
+    try:
+        pick = int(float(row["Drafted Pick No."]))
+    except (ValueError, TypeError):
+        pick = "—"
     color = "#CCCCCC"  # default gray
     logo_url = ""
 
