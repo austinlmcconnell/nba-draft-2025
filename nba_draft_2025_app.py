@@ -6,7 +6,7 @@ import pandas as pd
 st.set_page_config(page_title="2025 NBA Draft Portal", layout="wide")
 
 # Load Google Sheet CSV export
-sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiyb7cV_your_sheet_id_here/pub?output=csv"
+sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnTW2iNs8DQ--KGu7YkDLmaxumSsA-i8h8x3k79ALPN822N0moB2ajzMFXRp2bUuPoD3vrfvPRmKFi/pub?output=csv"
 df = pd.read_csv(sheet_url)
 
 # Clean and sort
