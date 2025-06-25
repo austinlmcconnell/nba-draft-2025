@@ -25,7 +25,11 @@ df = load_data()
 df = df.fillna("")
 
 # --- DROPDOWN MENU ---
-selected_player = st.selectbox("Select a player to view", ["-- All Players --"] + df["Name"].tolist())
+first_round = df[df["Rank"] != "Second Round prospects"]
+second_round = df[df["Rank"] == "Second Round prospects"]
+
+dropdown_names = ["-- All Players --"] + first_round["Name"].tolist()
+selected_player = st.selectbox("Select a player to view", dropdown_names)
 
 # --- PLAYER DISPLAY FUNCTION ---
 def display_player(row):
@@ -34,7 +38,13 @@ def display_player(row):
     # Headshot
     with col1:
         if row["Headshot"]:
-            st.image(row["Headshot"], width=150)
+            try:
+                response = requests.get(row["Headshot"])
+                if response.status_code == 200:
+                    img = Image.open(BytesIO(response.content))
+                    st.image(img, width=150)
+            except:
+                pass
 
     # Player Info
     with col2:
@@ -62,6 +72,12 @@ if selected_player != "-- All Players --":
     player_row = df[df["Name"] == selected_player].iloc[0]
     display_player(player_row)
 else:
-    for _, row in df.iterrows():
+    st.subheader("First Round Prospects")
+    for _, row in first_round.iterrows():
+        display_player(row)
+        st.markdown("---")
+
+    st.subheader("Second Round Prospects")
+    for _, row in second_round.iterrows():
         display_player(row)
         st.markdown("---")
