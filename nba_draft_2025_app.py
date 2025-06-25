@@ -42,27 +42,15 @@ def get_team_color(team):
 
 def get_grade_color(grade):
     color_map = {
-        "A": "green",
-        "A-": "green",
-        "B+": "#85C88A",
-        "B": "#C4DFA2",
-        "B-": "#E3DD87",
-        "C+": "#F2C14E",
-        "C": "orange",
-        "C-": "#FF9933",
-        "D+": "#FF6666",
-        "D": "#CC0000",
-        "D-": "#990000",
-        "F": "red"
+        "A": "green", "A-": "green", "B+": "#85C88A", "B": "#C4DFA2", "B-": "#E3DD87",
+        "C+": "#F2C14E", "C": "orange", "C-": "#FF9933", "D+": "#FF6666",
+        "D": "#CC0000", "D-": "#990000", "F": "red"
     }
     return color_map.get(grade.strip().upper(), "black")
 
 # --- LOAD DATA ---
 df = load_data()
 df = df.fillna("")
-
-# Create dictionary of team logo URLs
-team_logo_dict = dict(zip(df["Team Name"], df["Team Logo URL"]))
 
 # --- DROPDOWN MENU ---
 dropdown_names = ["-- All Players --"] + df["Name"].tolist()
@@ -101,7 +89,7 @@ def display_player(row):
         if row['My Mock Team']:
             mock_team = row['My Mock Team']
             mock_color = get_team_color(mock_team)
-            mock_logo = team_logo_dict.get(mock_team)
+            mock_logo = row['Team Logo URL']
             st.markdown(f"**Mock Draft Team:** <span style='color:{mock_color}'>{mock_team}</span>", unsafe_allow_html=True)
             if not row['Drafted Team'] and mock_logo:
                 st.image(mock_logo, width=60)
@@ -110,7 +98,7 @@ def display_player(row):
         if row['Drafted Team']:
             drafted_team = row['Drafted Team']
             drafted_color = get_team_color(drafted_team)
-            drafted_logo = team_logo_dict.get(drafted_team)
+            drafted_logo = row['Team Logo URL']
             st.markdown(f"**Drafted Team:** <span style='color:{drafted_color}'>{drafted_team}</span>", unsafe_allow_html=True)
             if drafted_logo:
                 st.image(drafted_logo, width=60)
