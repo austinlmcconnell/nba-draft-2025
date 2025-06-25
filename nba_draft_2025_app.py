@@ -3,6 +3,15 @@ import pandas as pd
 
 # --- CONFIG ---
 st.set_page_config(layout="wide", page_title="2025 NBA Draft Tracker")
+st.markdown("""
+    <style>
+        body {
+            background-color: white;
+            color: black;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("2025 NBA Draft Tracker")
 st.caption("Live updates from Austin McConnell's big board")
 
@@ -20,11 +29,6 @@ def load_data():
 
     return df
 
-def get_team_logo(team_abbr):
-    if not team_abbr or team_abbr == "":
-        return None
-    return f"https://a.espncdn.com/i/teamlogos/nba/500/{team_abbr.lower()}.png"
-
 def get_team_color(team):
     team_colors = {
         "Hawks": "#E03A3E", "Celtics": "#007A33", "Nets": "#000000", "Hornets": "#1D1160", "Bulls": "#CE1141",
@@ -34,11 +38,31 @@ def get_team_color(team):
         "Thunder": "#007AC1", "Magic": "#0077C0", "76ers": "#006BB6", "Suns": "#E56020", "Trail Blazers": "#E03A3E",
         "Kings": "#5A2D81", "Spurs": "#C4CED4", "Raptors": "#CE1141", "Jazz": "#002B5C", "Wizards": "#002B5C"
     }
-    return team_colors.get(team, "white")
+    return team_colors.get(team, "black")
+
+def get_grade_color(grade):
+    color_map = {
+        "A": "green",
+        "A-": "green",
+        "B+": "#85C88A",
+        "B": "#C4DFA2",
+        "B-": "#E3DD87",
+        "C+": "#F2C14E",
+        "C": "orange",
+        "C-": "#FF9933",
+        "D+": "#FF6666",
+        "D": "#CC0000",
+        "D-": "#990000",
+        "F": "red"
+    }
+    return color_map.get(grade.strip().upper(), "black")
 
 # --- LOAD DATA ---
 df = load_data()
 df = df.fillna("")
+
+# Create dictionary of team logo URLs
+team_logo_dict = dict(zip(df["Team Name"], df["Team Logo URL"]))
 
 # --- DROPDOWN MENU ---
 dropdown_names = ["-- All Players --"] + df["Name"].tolist()
@@ -66,28 +90,35 @@ def display_player(row):
             rank = row['Rank']
 
         st.markdown(f"### <span style='font-weight:700'>{rank}.</span> {row['Name']}", unsafe_allow_html=True)
+        st.markdown(f"**Mock Draft Position:** {row['My Mock Pick No.']}")
         st.markdown(f"**Position:** {row['Position']}")
         st.markdown(f"**School:** {row['School/Country']}")
         st.markdown(f"**Height:** {row['Height']} | **Weight:** {row['Weight']} | **Wingspan:** {row['Wingspan']}")
         st.markdown(f"**Biggest Skill:** {row['Biggest Skill']}")
         st.markdown(f"**Biggest Weakness:** {row['Biggest Weakness']}")
 
-        # Mocked Team
+        # Mocked Team Info
         if row['My Mock Team']:
-            team_color = get_team_color(row['My Mock Team'])
-            mock_team_logo = get_team_logo(row['My Mock Team'])
-            st.markdown(f"**Mock Draft Team:** <span style='color:{team_color}'>{row['My Mock Team']}</span>", unsafe_allow_html=True)
-            if mock_team_logo:
-                st.image(mock_team_logo, width=60)
+            mock_team = row['My Mock Team']
+            mock_color = get_team_color(mock_team)
+            mock_logo = team_logo_dict.get(mock_team)
+            st.markdown(f"**Mock Draft Team:** <span style='color:{mock_color}'>{mock_team}</span>", unsafe_allow_html=True)
+            if not row['Drafted Team'] and mock_logo:
+                st.image(mock_logo, width=60)
 
-        # Drafted Team
+        # Drafted Team Info
         if row['Drafted Team']:
-            drafted_team_logo = get_team_logo(row['Drafted Team'])
-            st.markdown(f"**Drafted Team:** {row['Drafted Team']}")
-            if drafted_team_logo:
-                st.image(drafted_team_logo, width=60)
+            drafted_team = row['Drafted Team']
+            drafted_color = get_team_color(drafted_team)
+            drafted_logo = team_logo_dict.get(drafted_team)
+            st.markdown(f"**Drafted Team:** <span style='color:{drafted_color}'>{drafted_team}</span>", unsafe_allow_html=True)
+            if drafted_logo:
+                st.image(drafted_logo, width=60)
 
-        st.markdown(f"**Grade:** {row['My Grade']}")
+        # Grade
+        grade = row['My Grade'].strip()
+        grade_color = get_grade_color(grade)
+        st.markdown(f"**Grade:** <span style='color:{grade_color}'>{grade}</span>", unsafe_allow_html=True)
 
 # --- DISPLAY LOGIC ---
 if selected_player != "-- All Players --":
