@@ -39,31 +39,14 @@ def load_data():
 
     return df
 
-def get_team_color(team):
-    team_colors = {
-        "Hawks": "#E03A3E", "Celtics": "#007A33", "Nets": "#000000", "Hornets": "#1D1160", "Bulls": "#CE1141",
-        "Cavaliers": "#6F263D", "Mavericks": "#00538C", "Nuggets": "#0E2240", "Pistons": "#1D42BA", "Warriors": "#FDB927",
-        "Rockets": "#CE1141", "Pacers": "#FDBB30", "Clippers": "#C8102E", "Lakers": "#FDB927", "Grizzlies": "#5D76A9",
-        "Heat": "#98002E", "Bucks": "#00471B", "Timberwolves": "#0C2340", "Pelicans": "#0C2340", "Knicks": "#F58426",
-        "Thunder": "#007AC1", "Magic": "#0077C0", "76ers": "#006BB6", "Suns": "#E56020", "Trail Blazers": "#E03A3E",
-        "Kings": "#5A2D81", "Spurs": "#C4CED4", "Raptors": "#CE1141", "Jazz": "#002B5C", "Wizards": "#002B5C"
-    }
-    return team_colors.get(team, "white")
-
-def get_grade_color(grade):
-    color_map = {
-        "A+": "green", "A": "green", "A-": "green",
-        "B+": "#85C88A", "B": "#C4DFA2", "B-": "#E3DD87",
-        "C+": "#F2C14E", "C": "orange", "C-": "#FF9933",
-        "D+": "#FF6666", "D": "#CC0000", "D-": "#990000", "F": "red"
-    }
-    return color_map.get(grade.strip().upper(), "white")
-
 def calculate_mock_accuracy(df):
     total_score = 0
     max_score = 0
+    detailed_rows = []
+
     for _, row in df.iterrows():
         try:
+            name = row["Name"]
             mock_pick = int(float(row["My Mock Pick No."]))
             drafted_pick = int(float(row["Drafted Pick No."]))
             mock_team = row["My Mock Team"].strip()
@@ -78,23 +61,37 @@ def calculate_mock_accuracy(df):
             team_score = 5 if mock_team == drafted_team else 0
             total_score += (pick_score + team_score)
 
+            detailed_rows.append({
+                "Player": name,
+                "Mocked Pick": mock_pick,
+                "Drafted Pick": drafted_pick,
+                "Mocked Team": mock_team,
+                "Drafted Team": drafted_team,
+                "Pick Score": pick_score,
+                "Team Score": team_score,
+                "Total": pick_score + team_score
+            })
+
     if max_score == 0:
-        return "N/A"
-    percent = (total_score / max_score) * 100
-    if percent >= 90:
-        return f"A ({percent:.1f}%)"
-    elif percent >= 75:
-        return f"B ({percent:.1f}%)"
-    elif percent >= 60:
-        return f"C ({percent:.1f}%)"
-    elif percent >= 45:
-        return f"D ({percent:.1f}%)"
+        grade = "N/A"
     else:
-        return f"F ({percent:.1f}%)"
+        percent = (total_score / max_score) * 100
+        if percent >= 90:
+            grade = f"A ({percent:.1f}%)"
+        elif percent >= 75:
+            grade = f"B ({percent:.1f}%)"
+        elif percent >= 60:
+            grade = f"C ({percent:.1f}%)"
+        elif percent >= 45:
+            grade = f"D ({percent:.1f}%)"
+        else:
+            grade = f"F ({percent:.1f}%)"
+
+    return grade, detailed_rows
 
 # --- LOAD DATA ---
 df = load_data().fillna("")
-accuracy_grade = calculate_mock_accuracy(df)
+accuracy_grade, accuracy_details = calculate_mock_accuracy(df)
 
 team_logo_lookup = {
     row["Team Name"]: row["Team Logo URL"]
@@ -102,6 +99,25 @@ team_logo_lookup = {
     if row["Team Name"] and row["Team Logo URL"]
 }
 
+team_colors = {
+    row["Team Name"]: row["Team Font Color"]
+    for _, row in df.iterrows()
+    if "Team Font Color" in df.columns and row["Team Name"] and row["Team Font Color"]
+}
+
+def get_team_color(team):
+    return team_colors.get(team, "white")
+
+def get_grade_color(grade):
+    color_map = {
+        "A+": "green", "A": "green", "A-": "green",
+        "B+": "#85C88A", "B": "#C4DFA2", "B-": "#E3DD87",
+        "C+": "#F2C14E", "C": "orange", "C-": "#FF9933",
+        "D+": "#FF6666", "D": "#CC0000", "D-": "#990000", "F": "red"
+    }
+    return color_map.get(grade.strip().upper(), "white")
+
+# --- LAYOUT ---
 tabs = st.tabs(["Draft Board", "Mock Accuracy"])
 
 with tabs[0]:
@@ -165,5 +181,6 @@ with tabs[0]:
 
 with tabs[1]:
     st.header("Mock Draft Accuracy")
-    st.write("This grade is based on how close each pick was to your prediction in both position and team.")
-    st.metric("Current Mock Accuracy", accuracy_grade)
+    st.metric("Current Overall Grade", accuracy_grade)
+    st.write("Pick-by-pick scoring below based on how close each player was to your projected pick and team.")
+    st.dataframe(pd.DataFrame(accuracy_details))
