@@ -12,7 +12,7 @@ st.caption("Live updates from Austin McConnell's big board")
 # --- FUNCTIONS ---
 @st.cache_data(ttl=60)
 def load_data():
-    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIrYuwvZev7Sn8K1SvW05aUWr4zL0rPSthIL8ECMeEUf_zHaO4eOn4r5akFdy2m3xeU7zBZz2-Hv1/pub?output=csv"
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnTW2iNs8DQ--KGu7YkDLmaxumSsA-i8h8x3k79ALPN822N0moB2ajzMFXRp2bUuPoD3vrfvPRmKFi/pub?output=csv"
     return pd.read_csv(url)
 
 def get_team_logo(team_abbr):
